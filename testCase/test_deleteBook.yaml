@@ -1,0 +1,38 @@
+---
+- config:
+    - testset: "all test cases"
+    - timeout: 1  # default is 10 seconds
+
+# 防止没有id是100的book
+- test:
+    - name: "addBook test 100"
+    - url: "/test/book/addBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'bookValues={id:"100",name:"Jenkins权威指南(100)",author:"John Ferguson Smart",year:"2016",digest:"John Ferguson Smart，Wakaleo Consulting的主管。"}'
+    - validators:
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+
+- test:
+    - name: "deleteBook, book can be found"
+    - url: "/test/book/deleteBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'idString={"id":"100"}'
+    - validators:
+        - compare: {jsonpath_mini: "errorNo", comparator: "str_eq", expected: "0"}
+
+- test:
+    - name: "deleteBook, book cannot be found"
+    - url: "/test/book/deleteBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'idString={"id":"100"}'
+    - validators:
+        - compare: {jsonpath_mini: "errorNo", comparator: "str_eq", expected: "1"}
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+
+
+
+
+

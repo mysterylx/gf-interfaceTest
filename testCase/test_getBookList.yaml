@@ -1,0 +1,25 @@
+---
+- config:
+    - testset: "getBookList"
+    - timeout: 1  # default is 10 seconds
+
+
+# 为了避免root中没有对象，尝试加一个book，可能成功可能失败,不加入测试
+- test:
+    - name: "try add book, maybe failed"
+    - url: "/test/book/addBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'bookValues={id:"1",name:"Jenkins权威指南(100)",author:"John Ferguson Smart",year:"2016",digest:"John Ferguson Smart，Wakaleo Consulting的主管。"}'
+    - validators:
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+
+- test:
+    - name: "getBookList test"
+    - url: "/test/book/getBookList"
+    - method: "POST"
+    - validators:
+        - compare: {jsonpath_mini: "root", comparator: "type", expected: list}
+        - compare: {jsonpath_mini: "totalProperty", comparator: "type", expected: int}
+        - compare: {jsonpath_mini: "root.0", comparator: "type", expected: map}
+        - compare: {jsonpath_mini: "root.0", comparator: "length_eq", expected: 5}

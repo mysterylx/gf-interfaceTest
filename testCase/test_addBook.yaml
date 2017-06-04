@@ -1,0 +1,88 @@
+---
+- config:
+    - testset: "all test cases"
+    - timeout: 1  # default is 10 seconds
+
+
+# 先确保id是100,101,102,103的书一定不存在
+- test:
+    - name: "try delete book 100"
+    - url: "/test/book/deleteBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'idString={"id":"100"}'
+    - validators:
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+- test:
+    - name: "try delete book 101"
+    - url: "/test/book/deleteBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'idString={"id":"101"}'
+    - validators:
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+- test:
+    - name: "try delete book 102"
+    - url: "/test/book/deleteBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'idString={"id":"102"}'
+    - validators:
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+- test:
+    - name: "try delete book 103"
+    - url: "/test/book/deleteBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'idString={"id":"102"}'
+    - validators:
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+
+- test:
+    - name: "addBook test, id 100"
+    - url: "/test/book/addBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'bookValues={id:"100",name:"Jenkins权威指南(100)",author:"John Ferguson Smart",year:"2016",digest:"John Ferguson Smart，Wakaleo Consulting的主管。"}'
+    - validators:
+        - compare: {jsonpath_mini: "errorNo", comparator: "str_eq", expected: "0"}
+
+- test:
+    - name: "addBook test, same id(100)"
+    - url: "/test/book/addBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'bookValues={id:"2",name:"Jenkins权威指南",author:"John Ferguson Smart",year:"2016",digest:"John Ferguson Smart，Wakaleo Consulting的主管。"}'
+    - validators:
+        - compare: {jsonpath_mini: "errorNo", comparator: "str_eq", expected: "1"}
+        - extract_test: {jsonpath_mini: "errorInfo",  test: "exists"}
+
+
+# 缺失信息，理论上应该报错的，但是实际没有。问题出在：前端校验，但是后端没有二次校验.
+- test:
+    - name: "addBook test, lose digest info"
+    - url: "/test/book/addBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'bookValues={id:"101",name:"Jenkins权威指南(100)",author:"John Ferguson Smart",year:"2016"}'
+    - validators:
+        - compare: {jsonpath_mini: "errorNo", comparator: "str_eq", expected: "1"}
+
+- test:
+    - name: "addBook test, lose author & digest & year info"
+    - url: "/test/book/addBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'bookValues={id:"102",name:"Jenkins权威指南(100)"}'
+    - validators:
+        - compare: {jsonpath_mini: "errorNo", comparator: "str_eq", expected: "1"}
+
+# 这个发现一个比较严重的问题：返回数据显示添加失败了（errorNo=1）,但是实际上，数据被加入数据库了
+- test:
+    - name: "addBook test, lose all info"
+    - url: "/test/book/addBook"
+    - method: "POST"
+    - headers: {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    - body: 'bookValues={id:"103"}'
+    - validators:
+        - compare: {jsonpath_mini: "errorNo", comparator: "str_eq", expected: "1"}
